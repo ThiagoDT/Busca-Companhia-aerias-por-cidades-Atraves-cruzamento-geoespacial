@@ -1,0 +1,55 @@
+
+services:
+  database:
+    image: postgis/postgis:17-3.5
+    container_name: prj12-database
+    restart: always
+
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    ports:
+      - "${PORT_DATABASE}:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database:/docker-entrypoint-initdb.d
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DATABASE}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: prj12-backend
+    restart: always
+
+    ports:
+      - "${PORT_BACK}:3500"
+
+    environment:
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER}
+      DB_NAME: ${POSTGRES_DATABASE}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+
+    depends_on:
+      database:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: prj12-frontend
+    restart: always
+    ports:
+      - "${PORT_FRONT}:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

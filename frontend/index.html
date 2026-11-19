@@ -1,0 +1,60 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>PRJ12 - Busca Geoespacial de Voos</title>
+
+    <!-- Leaflet CSS -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+    <!-- Leaflet Draw CSS -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"
+    >
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>Busca Geoespacial de Voos</h1>
+        <p>Selecione uma região no mapa para encontrar cidades, companhias aéreas e turnos.</p>
+    </header>
+
+    <main>
+        <section class="map-section">
+            <div id="map"></div>
+
+            <button id="search-button">
+                Buscar cidades na região
+            </button>
+        </section>
+
+        <section class="results-section">
+            <h2>Resultados da busca</h2>
+
+            <div id="results">
+                <p>Desenhe uma região no mapa para iniciar a busca.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Leaflet Draw JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+    <script src="js/map.js"></script>
+
+</body>
+</html>
