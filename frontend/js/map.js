@@ -1,4 +1,4 @@
-
+let locatedCity = null;
 const map = L.map("map").setView([-15.7801, -47.9292], 4);
 
 // Camada do OpenStreetMap
@@ -28,13 +28,86 @@ const drawControl = new L.Control.Draw({
 
 map.addControl(drawControl);
 
-// Armazenará os marcadores das cidades
+// Marcadores de cidades cadastradas no banco
+let registeredCityMarkers = [];
+
+// Marcadores das cidades encontradas na busca geoespacial
 let cityMarkers = [];
+
+// Limpa os resultados da busca geoespacial
+function limparResultados() {
+    const results = document.getElementById("results");
+
+    // Remove os cards exibidos
+    results.innerHTML = "";
+
+    // Remove somente os marcadores criados pela busca
+    cityMarkers.forEach(marker => {
+        map.removeLayer(marker);
+    });
+
+    cityMarkers = [];
+}
+
+// Busca todas as cidades cadastradas no banco
+async function carregarCidades() {
+    try {
+        const response = await fetch("/api/cidades");
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.erro || "Erro ao carregar cidades.");
+        }
+
+        // Remove os marcadores cadastrados anteriormente
+        registeredCityMarkers.forEach(marker => {
+            map.removeLayer(marker);
+        });
+
+        registeredCityMarkers = [];
+
+        // Cria um marcador para cada cidade
+        data.cidades.forEach(cidade => {
+            const marker = L.marker([
+                cidade.latitude,
+                cidade.longitude
+            ]).addTo(map);
+
+            marker.bindPopup(`
+                <strong>${cidade.nome}</strong><br>
+                Estado: ${cidade.estado}<br>
+                País: ${cidade.pais}
+            `);
+
+            registeredCityMarkers.push(marker);
+        });
+
+    } catch (error) {
+        console.error("Erro ao carregar cidades:", error);
+    }
+}
 
 // Evento disparado quando um polígono é criado
 map.on(L.Draw.Event.CREATED, function (event) {
+    // Limpa os resultados da busca anterior
+    limparResultados();
+
+    // Remove os polígonos anteriores
     drawnItems.clearLayers();
+
+    // Adiciona o novo polígono
     drawnItems.addLayer(event.layer);
+});
+
+// Quando um polígono é editado
+map.on(L.Draw.Event.EDITED, function () {
+    limparResultados();
+});
+
+// Limpa os resultados quando um polígono é excluído
+map.on(L.Draw.Event.DELETED, function () {
+    limparResultados();
 });
 
 // Botão de busca
@@ -140,3 +213,140 @@ function exibirResultados(data) {
         map.fitBounds(group.getBounds().pad(0.2));
     }
 }
+async function localizarCidade() {
+    const nome = document.getElementById("city-name").value.trim();
+    const estado = document.getElementById("city-state").value.trim();
+    const pais = document.getElementById("city-country").value.trim();
+
+    const button = document.getElementById("locate-city-button");
+    const status = document.getElementById("location-status");
+    const preview = document.getElementById("coordinates-preview");
+    const registerButton = document.getElementById("register-city-button");
+
+    // Limpa uma localização anterior
+    locatedCity = null;
+    registerButton.disabled = true;
+    preview.hidden = true;
+
+    if (!nome || !estado || !pais) {
+        status.textContent = "Preencha o nome, estado e país.";
+        return;
+    }
+
+    button.disabled = true;
+    status.textContent = "Localizando cidade...";
+
+    try {
+        const parametros = new URLSearchParams({
+            nome,
+            estado,
+            pais
+        });
+
+        const response = await fetch(
+            `/api/cidades/localizar?${parametros.toString()}`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.erro || "Não foi possível localizar a cidade.");
+        }
+
+        locatedCity = data;
+
+        document.getElementById("latitude-preview").textContent =
+            `Latitude: ${data.latitude}`;
+
+        document.getElementById("longitude-preview").textContent =
+            `Longitude: ${data.longitude}`;
+
+        preview.hidden = false;
+        registerButton.disabled = false;
+
+        status.textContent = "Cidade localizada com sucesso!";
+
+        // Centraliza o mapa na cidade encontrada
+        map.setView(
+            [data.latitude, data.longitude],
+            10
+        );
+
+    } catch (error) {
+        console.error("Erro ao localizar cidade:", error);
+        status.textContent = error.message;
+
+    } finally {
+        button.disabled = false;
+    }
+}
+
+document
+    .getElementById("locate-city-button")
+    .addEventListener("click", localizarCidade);
+//cadastra a cidade
+async function cadastrarCidade(event) {
+    event.preventDefault();
+
+    const registerButton = document.getElementById("register-city-button");
+    const status = document.getElementById("location-status");
+
+    if (!locatedCity) {
+        status.textContent = "Primeiro localize a cidade.";
+        return;
+    }
+
+    registerButton.disabled = true;
+    status.textContent = "Cadastrando cidade...";
+
+    try {
+        const response = await fetch("/api/cidades", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                nome: locatedCity.nome,
+                estado: locatedCity.estado,
+                pais: locatedCity.pais,
+                latitude: locatedCity.latitude,
+                longitude: locatedCity.longitude
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.erro || "Erro ao cadastrar cidade.");
+        }
+
+        status.textContent = "Cidade cadastrada com sucesso!";
+
+        // Atualiza os marcadores com os dados do banco
+        await carregarCidades();
+
+        // Limpa o formulário
+        document.getElementById("city-form").reset();
+
+        // Limpa os dados da localização anterior
+        locatedCity = null;
+
+        document.getElementById("coordinates-preview").hidden = true;
+
+        registerButton.disabled = true;
+
+    } catch (error) {
+        console.error("Erro ao cadastrar cidade:", error);
+        status.textContent = error.message;
+
+    } finally {
+        registerButton.disabled = true;
+    }
+}
+
+document
+    .getElementById("city-form")
+    .addEventListener("submit", cadastrarCidade);
+
+// Carrega as cidades assim que o mapa é inicializado
+carregarCidades();

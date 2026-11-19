@@ -29,16 +29,91 @@
         <h1>Busca Geoespacial de Voos</h1>
         <p>Selecione uma região no mapa para encontrar cidades, companhias aéreas e turnos.</p>
     </header>
-
+    
     <main>
-        <section class="map-section">
-            <div id="map"></div>
+        <div class="content-layout">
 
-            <button id="search-button">
-                Buscar cidades na região
-            </button>
-        </section>
+            <!-- Mapa -->
+            <section class="map-section">
+                <h2>Mapa de cidades</h2>
 
+                <div id="map"></div>
+
+                <button id="search-button">
+                    Buscar cidades na região
+                </button>
+            </section>
+
+            <!-- Cadastro de cidades -->
+            <section class="register-section">
+                <h2>Cadastrar cidade</h2>
+
+                <form id="city-form">
+
+                    <div class="form-group">
+                        <label for="city-name">Nome da cidade</label>
+                        <input
+                            type="text"
+                            id="city-name"
+                            placeholder="Ex.: Santos"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="city-state">Estado (UF)</label>
+                        <input
+                            type="text"
+                            id="city-state"
+                            placeholder="Ex.: SP"
+                            maxlength="2"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="city-country">País</label>
+                        <input
+                            type="text"
+                            id="city-country"
+                            value="Brasil"
+                            required
+                        >
+                    </div>
+
+                    <button
+                        type="button"
+                        id="locate-city-button"
+                    >
+                        Localizar cidade
+                    </button>
+
+                    <p id="location-status" role="status" aria-live="polite"></p>
+
+                    <div id="coordinates-preview" hidden>
+                        <h3>Localização encontrada</h3>
+                        <p id="latitude-preview"></p>
+                        <p id="longitude-preview"></p>
+                    </div>
+
+                    <button
+                        type="submit"
+                        id="register-city-button"
+                        disabled
+                    >
+                        Cadastrar cidade
+                    </button>
+
+                </form>
+
+                <p class="geocoding-attribution">
+                    Geocodificação: © OpenStreetMap contributors
+                </p>
+            </section>
+
+        </div>
+
+        <!-- Resultados da busca geoespacial -->
         <section class="results-section">
             <h2>Resultados da busca</h2>
 
@@ -47,6 +122,7 @@
             </div>
         </section>
     </main>
+
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
