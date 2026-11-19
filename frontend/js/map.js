@@ -28,8 +28,6 @@ const drawControl = new L.Control.Draw({
 
 map.addControl(drawControl);
 
-// Marcadores de cidades cadastradas no banco
-let registeredCityMarkers = [];
 
 // Marcadores das cidades encontradas na busca geoespacial
 let cityMarkers = [];
@@ -47,45 +45,6 @@ function limparResultados() {
     });
 
     cityMarkers = [];
-}
-
-// Busca todas as cidades cadastradas no banco
-async function carregarCidades() {
-    try {
-        const response = await fetch("/api/cidades");
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.erro || "Erro ao carregar cidades.");
-        }
-
-        // Remove os marcadores cadastrados anteriormente
-        registeredCityMarkers.forEach(marker => {
-            map.removeLayer(marker);
-        });
-
-        registeredCityMarkers = [];
-
-        // Cria um marcador para cada cidade
-        data.cidades.forEach(cidade => {
-            const marker = L.marker([
-                cidade.latitude,
-                cidade.longitude
-            ]).addTo(map);
-
-            marker.bindPopup(`
-                <strong>${cidade.nome}</strong><br>
-                Estado: ${cidade.estado}<br>
-                País: ${cidade.pais}
-            `);
-
-            registeredCityMarkers.push(marker);
-        });
-
-    } catch (error) {
-        console.error("Erro ao carregar cidades:", error);
-    }
 }
 
 // Evento disparado quando um polígono é criado
@@ -322,8 +281,6 @@ async function cadastrarCidade(event) {
 
         status.textContent = "Cidade cadastrada com sucesso!";
 
-        // Atualiza os marcadores com os dados do banco
-        await carregarCidades();
 
         // Limpa o formulário
         document.getElementById("city-form").reset();
@@ -347,6 +304,3 @@ async function cadastrarCidade(event) {
 document
     .getElementById("city-form")
     .addEventListener("submit", cadastrarCidade);
-
-// Carrega as cidades assim que o mapa é inicializado
-carregarCidades();
