@@ -11,7 +11,7 @@ class BuscaController:
 
         dados = request.get_json(silent=True)
 
-        if not dados or "poligono" not in dados:
+        if not isinstance(dados, dict) or "poligono" not in dados:
             return jsonify({
                 "erro": "Informe um polígono."
             }), 400
